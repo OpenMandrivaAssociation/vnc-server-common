@@ -53,3 +53,15 @@ rm -rf %{buildroot}
 
 %preun
 %_preun_service vncserver
+
+
+%changelog
+* Mon Jan 03 2011 Paulo Ricardo Zanoni <pzanoni@mandriva.com> 1.0-2mdv2011.0
++ Revision: 628003
+- Initscript: fix reporting of "status"
+- Initscript: add '\n' to "Usage" string
+
+* Thu Dec 23 2010 Paulo Ricardo Zanoni <pzanoni@mandriva.com> 1.0-1mdv2011.0
++ Revision: 624168
+- imported package vnc-server-common
+

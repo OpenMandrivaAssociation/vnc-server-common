@@ -1,0 +1,139 @@
+#!/bin/bash
+#
+# chkconfig: - 90 10
+# description: Start TigerVNC server at boot time
+#
+### BEGIN INIT INFO
+# Provides:          vncserver
+# Required-Start:    $network
+# Required-Stop:     $network
+# Default-Start:
+# Default-Stop:      0 1 2 3 4 5 6
+# Short-Description: Start TigerVNC server at boot time
+# Description:       Provides TigerVNC servers according to the values
+#                    provided by the sysconfig configuration.
+### END INIT INFO
+
+# vncserver is a wrapper that becomes Xvnc
+NAME=vncserver
+DAEMON_WRAPPER=/usr/bin/$NAME
+DAEMON_PROCESS=Xvnc
+LOCK_FILE=/var/lock/subsys/$NAME
+# This file stores information of the started servers
+DISPLAYS_FILE=/var/run/$NAME
+
+# About return codes and messages:
+# Since we can have more than one vncserver to start, the chosen policy was:
+# - if at least one of the vncservers start, we pretend a "success" but print
+#   error messages for the failed servers
+RETVAL=0
+
+# Include mandatory functions
+. /etc/init.d/functions
+
+# Exit if the binary is not in $PATH
+[ -x "$DAEMON_WRAPPER" ] || exit 0
+
+# Load config file if present
+[ -r /etc/sysconfig/vncservers ] && . /etc/sysconfig/vncservers
+
+do_start() {
+    gprintf "Starting $NAME: "
+
+    # Return if it was already started
+    [ -e $LOCK_FILE ] && echo_success && echo && return
+
+    SERVERS_STARTED=0
+    FAILURES=0
+
+    # Reset the file
+    echo -n > $DISPLAYS_FILE
+
+    for display in ${VNCSERVERS}; do
+	DISPLAY_NUMBER="${display%:*}"
+	USER_NAME="${display##*:}"
+	SERVER_ARGS="${VNCSERVERARGS[DISPLAY_NUMBER]}"
+
+	su --login $USER_NAME -c "cd ~$USER_NAME && [ -f .vnc/passwd ] && $DAEMON_WRAPPER :$DISPLAY_NUMBER $SERVER_ARGS" > /dev/null 2>&1
+	ret=$?
+	if [ "$ret" != "0" ]; then
+	    gprintf "Failed to start $NAME $DISPLAY_NUMBER"
+	    ((FAILURES++))
+	else
+	    ((SERVERS_STARTED++))
+	    echo $display >> $DISPLAYS_FILE
+	    touch $LOCK_FILE
+	fi
+    done
+
+    if [ "$SERVERS_STARTED" != "0" ]; then
+	echo_success
+	RETVAL=0
+    else
+	if [ "$FAILURES" = "0" ]; then
+	    # No servers started and no failures means that there are no servers
+	    # configured
+	    echo_success
+	    RETVAL=0
+	else
+	    echo_failure
+	    RETVAL=1
+	fi
+    fi
+    echo
+}
+
+do_stop() {
+    gprintf "Stopping $NAME: "
+
+    # Return if not started
+    [ ! -f "$DISPLAYS_FILE" ] && echo_success && echo && return
+
+    FAILURES=0
+
+    for display in $(cat $DISPLAYS_FILE); do
+	DISPLAY_NUMBER="${display%:*}"
+	USER_NAME="${display##*:}"
+	su --login $USER_NAME \
+	   -c "$DAEMON_WRAPPER -kill :${DISPLAY_NUMBER}" >/dev/null 2>&1
+	ret=$?
+	if [ "$ret" != "0" ]; then
+	    gprintf "Failed to stop $NAME $DISPLAY_NUMBER"
+	    ((FAILURES++))
+	fi
+    done
+
+    if [ "$FAILURES" != 0 ]; then
+	echo_failure
+	RETVAL=1
+    else
+	rm -f $LOCK_FILE $DISPLAYS_FILE
+	echo_success
+	RETVAL=0
+    fi
+    echo
+}
+
+case $1 in
+    start)
+	do_start
+	;;
+    stop)
+	do_stop
+	;;
+    status)
+	status $DAEMON_PROCESS
+	RETVAL=$?
+	;;
+    restart)
+	do_stop
+	do_start
+	;;
+    *)
+	gprintf "Usage: $(basename $0) {start|stop|status|restart}\n"
+	RETVAL=0
+	;;
+esac
+
+exit $RETVAL
+
