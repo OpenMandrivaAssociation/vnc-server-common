@@ -35,9 +35,9 @@ implementations:
 %install
 rm -rf %{buildroot}
 
-install -D -m 644 %{SOURCE1}/sysconfig-vncservers \
+install -D -m 644 %{SOURCE1} \
                   %{buildroot}/%{_sysconfdir}/sysconfig/vncservers
-install -D -m 755 %{SOURCE0}/vncserver-initscript \
+install -D -m 755 %{SOURCE0} \
                   %{buildroot}/%{_initrddir}/vncserver
 
 %clean
