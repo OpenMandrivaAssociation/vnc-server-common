@@ -1,6 +1,6 @@
 Name:    vnc-server-common
 Version: 1.0
-Release: %mkrel 2
+Release: 3
 
 License:   GPLv2+
 URL:       http://www.mandriva.com
@@ -35,9 +35,9 @@ implementations:
 %install
 rm -rf %{buildroot}
 
-install -D -m 644 %{_sourcedir}/sysconfig-vncservers \
+install -D -m 644 %{SOURCE1}/sysconfig-vncservers \
                   %{buildroot}/%{_sysconfdir}/sysconfig/vncservers
-install -D -m 755 %{_sourcedir}/vncserver-initscript \
+install -D -m 755 %{SOURCE0}/vncserver-initscript \
                   %{buildroot}/%{_initrddir}/vncserver
 
 %clean
@@ -54,14 +54,4 @@ rm -rf %{buildroot}
 %preun
 %_preun_service vncserver
 
-
-%changelog
-* Mon Jan 03 2011 Paulo Ricardo Zanoni <pzanoni@mandriva.com> 1.0-2mdv2011.0
-+ Revision: 628003
-- Initscript: fix reporting of "status"
-- Initscript: add '\n' to "Usage" string
-
-* Thu Dec 23 2010 Paulo Ricardo Zanoni <pzanoni@mandriva.com> 1.0-1mdv2011.0
-+ Revision: 624168
-- imported package vnc-server-common
 
