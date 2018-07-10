@@ -1,6 +1,6 @@
 Name:    vnc-server-common
 Version: 1.0
-Release: 11
+Release: 12
 
 License:   GPLv2+
 URL:       http://www.mandriva.com
