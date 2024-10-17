@@ -3,7 +3,7 @@ Version: 1.0
 Release: 14
 
 License:   GPLv2+
-URL:       http://www.mandriva.com
+URL:       https://www.mandriva.com
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: noarch
 
